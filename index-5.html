@@ -1,0 +1,798 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black">
+<meta name="apple-mobile-web-app-title" content="N.A.V.I">
+<meta name="theme-color" content="#0a0a0a">
+<title>N.A.V.I</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@300;400;500&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #0a0a0a;
+    --surface: #141414;
+    --border: #222;
+    --border-light: #2a2a2a;
+    --text: #e8e8e8;
+    --text-dim: #555;
+    --text-mid: #888;
+    --red: #ff4444;
+    --green: #44cc88;
+    --blue: #4488ff;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  html, body {
+    height: 100%;
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'DM Sans', sans-serif;
+    font-size: 14px;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  body {
+    display: flex;
+    flex-direction: column;
+    height: 100dvh;
+    overflow: hidden;
+  }
+
+  /* AUTH */
+  .auth-screen {
+    position: fixed;
+    inset: 0;
+    background: var(--bg);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 200;
+    padding: 24px;
+  }
+
+  .auth-box {
+    width: 100%;
+    max-width: 360px;
+    display: flex;
+    flex-direction: column;
+    gap: 22px;
+  }
+
+  .auth-logo {
+    font-family: 'DM Mono', monospace;
+    font-size: 28px;
+    font-weight: 500;
+    letter-spacing: 0.2em;
+    color: var(--text);
+    text-align: center;
+  }
+
+  .auth-sub {
+    font-family: 'DM Mono', monospace;
+    font-size: 9px;
+    letter-spacing: 0.15em;
+    color: var(--text-dim);
+    text-align: center;
+    margin-top: -14px;
+  }
+
+  .auth-tabs {
+    display: flex;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    overflow: hidden;
+  }
+
+  .auth-tab {
+    flex: 1;
+    padding: 9px;
+    text-align: center;
+    font-size: 12px;
+    font-family: 'DM Mono', monospace;
+    letter-spacing: 0.08em;
+    color: var(--text-dim);
+    cursor: pointer;
+    transition: all 0.15s;
+    background: transparent;
+    border: none;
+  }
+  .auth-tab.active { background: var(--surface); color: var(--text); }
+
+  .auth-label {
+    font-family: 'DM Mono', monospace;
+    font-size: 10px;
+    letter-spacing: 0.1em;
+    color: var(--text-dim);
+    margin-bottom: 8px;
+  }
+
+  .auth-input {
+    background: var(--surface);
+    border: 1px solid var(--border-light);
+    border-radius: 8px;
+    color: var(--text);
+    font-family: 'DM Mono', monospace;
+    font-size: 13px;
+    padding: 12px 14px;
+    outline: none;
+    transition: border-color 0.15s;
+    width: 100%;
+  }
+  .auth-input:focus { border-color: #444; }
+  .auth-input::placeholder { color: var(--text-dim); }
+
+  .auth-btn {
+    background: var(--text);
+    color: var(--bg);
+    border: none;
+    border-radius: 8px;
+    font-family: 'DM Mono', monospace;
+    font-size: 12px;
+    font-weight: 500;
+    letter-spacing: 0.1em;
+    padding: 13px;
+    cursor: pointer;
+    transition: opacity 0.15s;
+    width: 100%;
+  }
+  .auth-btn:hover { opacity: 0.85; }
+
+  .auth-error {
+    font-family: 'DM Mono', monospace;
+    font-size: 11px;
+    color: var(--red);
+    text-align: center;
+    min-height: 14px;
+  }
+
+  .auth-hint {
+    font-size: 11px;
+    color: var(--text-dim);
+    text-align: center;
+    line-height: 1.5;
+    margin-top: -8px;
+  }
+
+  /* APP */
+  .app { display: none; flex-direction: column; height: 100dvh; }
+  .app.visible { display: flex; }
+
+  header {
+    flex-shrink: 0;
+    border-bottom: 1px solid var(--border);
+    padding: 14px 20px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+
+  .logo {
+    font-family: 'DM Mono', monospace;
+    font-weight: 500;
+    font-size: 15px;
+    letter-spacing: 0.15em;
+  }
+
+  .header-right { display: flex; align-items: center; gap: 10px; }
+
+  .status {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-family: 'DM Mono', monospace;
+    font-size: 10px;
+    letter-spacing: 0.1em;
+    color: var(--text-dim);
+  }
+
+  .dot {
+    width: 5px; height: 5px;
+    border-radius: 50%;
+    background: var(--red);
+    flex-shrink: 0;
+    transition: background 0.3s;
+  }
+  .dot.online { background: var(--green); box-shadow: 0 0 6px rgba(68,204,136,0.5); animation: blink 2s ease-in-out infinite; }
+  .dot.wake { background: var(--blue); box-shadow: 0 0 6px rgba(68,136,255,0.5); animation: blink 1.5s ease-in-out infinite; }
+  @keyframes blink { 0%,100%{opacity:1} 50%{opacity:0.4} }
+
+  .menu-wrap { position: relative; }
+
+  .menu-btn {
+    background: transparent;
+    border: none;
+    color: var(--text-dim);
+    cursor: pointer;
+    font-size: 20px;
+    width: 30px; height: 30px;
+    display: flex; align-items: center; justify-content: center;
+    border-radius: 6px;
+    transition: all 0.15s;
+    letter-spacing: -2px;
+    padding-bottom: 8px;
+    font-family: 'DM Mono', monospace;
+  }
+  .menu-btn:hover { background: var(--surface); color: var(--text); }
+
+  .dropdown {
+    display: none;
+    position: absolute;
+    right: 0; top: 36px;
+    background: #1c1c1c;
+    border: 1px solid var(--border-light);
+    border-radius: 10px;
+    min-width: 200px;
+    z-index: 100;
+    overflow: hidden;
+    box-shadow: 0 8px 30px rgba(0,0,0,0.7);
+  }
+  .dropdown.open { display: block; }
+
+  .dropdown-item {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 12px 16px;
+    font-size: 13px;
+    color: var(--text);
+    cursor: pointer;
+    transition: background 0.1s;
+    border: none;
+    background: transparent;
+    width: 100%;
+    text-align: left;
+    font-family: 'DM Sans', sans-serif;
+  }
+  .dropdown-item:hover { background: #242424; }
+  .dropdown-sep { height: 1px; background: var(--border); margin: 4px 0; }
+  .dropdown-item.danger { color: var(--red); }
+
+  .guest-badge {
+    display: none;
+    flex-shrink: 0;
+    padding: 6px 20px;
+    border-bottom: 1px solid var(--border);
+    font-family: 'DM Mono', monospace;
+    font-size: 10px;
+    color: var(--text-dim);
+    letter-spacing: 0.08em;
+  }
+  .guest-badge.show { display: block; }
+
+  .messages {
+    flex: 1;
+    overflow-y: auto;
+    padding: 20px;
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+    min-height: 0;
+    scrollbar-width: thin;
+    scrollbar-color: var(--border) transparent;
+  }
+  .messages::-webkit-scrollbar { width: 2px; }
+  .messages::-webkit-scrollbar-thumb { background: var(--border); }
+
+  .msg { display: flex; flex-direction: column; gap: 4px; animation: fadein 0.2s ease; }
+  @keyframes fadein { from{opacity:0;transform:translateY(4px)} to{opacity:1;transform:translateY(0)} }
+
+  .msg-meta {
+    font-family: 'DM Mono', monospace;
+    font-size: 10px;
+    letter-spacing: 0.08em;
+    color: var(--text-dim);
+  }
+  .msg.user .msg-meta { text-align: right; }
+
+  .msg-text {
+    font-size: 14px;
+    line-height: 1.65;
+    white-space: pre-wrap;
+    word-break: break-word;
+    max-width: 80%;
+  }
+  .msg.navi .msg-text { align-self: flex-start; color: var(--text); }
+  .msg.user .msg-text { align-self: flex-end; color: var(--text-mid); text-align: right; }
+  .msg.sys .msg-text {
+    align-self: center;
+    color: var(--red);
+    font-family: 'DM Mono', monospace;
+    font-size: 11px;
+    text-align: center;
+    max-width: 100%;
+    opacity: 0.8;
+  }
+
+  .typing-dots { display: flex; gap: 4px; padding: 4px 0; align-self: flex-start; }
+  .typing-dots span {
+    width: 4px; height: 4px;
+    border-radius: 50%;
+    background: var(--text-dim);
+    animation: tdot 1.2s ease-in-out infinite;
+  }
+  .typing-dots span:nth-child(2) { animation-delay: 0.2s; }
+  .typing-dots span:nth-child(3) { animation-delay: 0.4s; }
+  @keyframes tdot { 0%,60%,100%{opacity:0.3;transform:translateY(0)} 30%{opacity:1;transform:translateY(-3px)} }
+
+  .input-area {
+    flex-shrink: 0;
+    border-top: 1px solid var(--border);
+    padding: 12px 20px;
+    display: flex;
+    gap: 8px;
+    align-items: flex-end;
+  }
+
+  .icon-btn {
+    background: transparent;
+    border: 1px solid var(--border-light);
+    color: var(--text-dim);
+    border-radius: 6px;
+    width: 36px; height: 36px;
+    display: flex; align-items: center; justify-content: center;
+    cursor: pointer;
+    font-size: 13px;
+    flex-shrink: 0;
+    transition: all 0.15s;
+  }
+  .icon-btn:hover { border-color: #444; color: var(--text); }
+  .icon-btn.active-mic { border-color: var(--red); color: var(--red); background: rgba(255,68,68,0.06); }
+
+  textarea {
+    flex: 1;
+    background: var(--surface);
+    border: 1px solid var(--border-light);
+    border-radius: 6px;
+    color: var(--text);
+    font-family: 'DM Sans', sans-serif;
+    font-size: 14px;
+    padding: 8px 12px;
+    outline: none;
+    resize: none;
+    min-height: 36px;
+    max-height: 100px;
+    line-height: 1.5;
+    transition: border-color 0.15s;
+  }
+  textarea:focus { border-color: #444; }
+  textarea::placeholder { color: var(--text-dim); }
+
+  .send-btn {
+    background: var(--text);
+    color: var(--bg);
+    border: none;
+    border-radius: 6px;
+    font-family: 'DM Mono', monospace;
+    font-size: 10px;
+    font-weight: 500;
+    letter-spacing: 0.05em;
+    padding: 0 14px;
+    height: 36px;
+    cursor: pointer;
+    transition: opacity 0.15s;
+    white-space: nowrap;
+    flex-shrink: 0;
+  }
+  .send-btn:hover { opacity: 0.85; }
+  .send-btn:disabled { opacity: 0.3; cursor: not-allowed; }
+
+  @media (max-width: 480px) {
+    header { padding: 12px 16px; }
+    .messages { padding: 16px; gap: 16px; }
+    .input-area { padding: 10px 16px; }
+  }
+</style>
+</head>
+<body>
+
+<!-- AUTH -->
+<div class="auth-screen" id="authScreen">
+  <div class="auth-box">
+    <div>
+      <div class="auth-logo">N.A.V.I</div>
+      <div class="auth-sub">NEURAL ADAPTIVE VIRTUAL INTELLIGENCE</div>
+    </div>
+
+    <div class="auth-tabs">
+      <button class="auth-tab active" onclick="switchTab('creator')" id="tabCreator">Создатель</button>
+      <button class="auth-tab" onclick="switchTab('guest')" id="tabGuest">Гость</button>
+    </div>
+
+    <div id="panelCreator">
+      <div class="auth-label">API КЛЮЧ (GROQ)</div>
+      <input type="password" class="auth-input" id="creatorInput" placeholder="gsk_xxxxxxxxxxxxxxxx" />
+    </div>
+
+    <div id="panelGuest" style="display:none">
+      <div class="auth-label" style="margin-bottom:8px">ГОСТЕВОЙ КОД</div>
+      <input type="password" class="auth-input" id="guestInput" placeholder="Введи код от создателя" style="margin-bottom:14px" />
+      <div class="auth-label" style="margin-bottom:8px">КЛЮЧ ДОСТУПА</div>
+      <input type="password" class="auth-input" id="guestKeyInput" placeholder="Ключ от создателя" />
+    </div>
+
+    <div class="auth-error" id="authError"></div>
+    <button class="auth-btn" onclick="doAuth()">ВОЙТИ</button>
+    <div class="auth-hint" id="authHint">Введи API ключ Groq для полного доступа</div>
+  </div>
+</div>
+
+<!-- APP -->
+<div class="app" id="mainApp">
+  <header>
+    <div class="logo">N.A.V.I</div>
+    <div class="header-right">
+      <div class="status">
+        <span class="dot" id="statusDot"></span>
+        <span id="statusText">offline</span>
+      </div>
+      <div class="menu-wrap">
+        <button class="menu-btn" onclick="toggleMenu()">···</button>
+        <div class="dropdown" id="dropdown">
+          <button class="dropdown-item" onclick="installFromMenu()">📲 &nbsp;Установить приложение</button>
+          <button class="dropdown-item" onclick="toggleWakeFromMenu()">👁 &nbsp;<span id="wakeMenuLabel">Включить wake word</span></button>
+          <button class="dropdown-item" onclick="toggleMuteFromMenu()">🔇 &nbsp;<span id="muteMenuLabel">Выключить звук</span></button>
+          <div class="dropdown-sep"></div>
+          <button class="dropdown-item danger" onclick="logout()">↩ &nbsp;Выйти</button>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <div class="guest-badge" id="guestBadge">гостевой доступ</div>
+  <div class="messages" id="messages"></div>
+
+  <div class="input-area">
+    <button class="icon-btn" id="voiceBtn" onclick="toggleVoice()" title="Голосовой ввод">🎤</button>
+    <textarea id="msgInput" placeholder="Напиши что-нибудь..." rows="1"
+      onkeydown="handleKey(event)" oninput="autoResize(this)"></textarea>
+    <button class="send-btn" id="sendBtn" onclick="sendMessage()">отправить</button>
+  </div>
+</div>
+
+<script>
+  // ── КОНФИГ — ИЗМЕНИ ЭТИ ЗНАЧЕНИЯ ──
+  const GUEST_HASH = 'b33099ca8473b02ddf29b0c1d04e95f13a0424b608d54c0a75b43bbe58008122';
+
+  const SYSTEM_PROMPT = `Ты N.A.V.I — Neural Adaptive Virtual Intelligence. Персональный ИИ-ассистент. Ты умная, чёткая, с характером — немного дерзкая но верная. Отвечаешь лаконично и по делу. Помогаешь с любыми задачами. Отвечай на том языке, на котором к тебе обращаются.`;
+
+  let apiKey = '';
+  let isGuest = false;
+  let isLoading = false;
+  let recognition = null;
+  let wakeRecognition = null;
+  let isListening = false;
+  let wakeActive = false;
+  let deferredPrompt = null;
+  let isMuted = false;
+  const history = [];
+
+  // PWA
+  window.addEventListener('beforeinstallprompt', (e) => { e.preventDefault(); deferredPrompt = e; });
+  if ('serviceWorker' in navigator) navigator.serviceWorker.register('sw.js').catch(()=>{});
+
+  async function installApp() {
+    if (!deferredPrompt) return false;
+    deferredPrompt.prompt();
+    await deferredPrompt.userChoice;
+    deferredPrompt = null;
+    return true;
+  }
+
+  async function installFromMenu() {
+    closeMenu();
+    const ok = await installApp();
+    if (!ok) addMsg('sys', 'Уже установлено или недоступно.\nNa iPhone: Safari → Поделиться → На экран Домой');
+  }
+
+  // AUTH
+  let currentTab = 'creator';
+
+  function switchTab(tab) {
+    currentTab = tab;
+    document.getElementById('panelCreator').style.display = tab === 'creator' ? 'block' : 'none';
+    document.getElementById('panelGuest').style.display = tab === 'guest' ? 'block' : 'none';
+    document.getElementById('tabCreator').classList.toggle('active', tab === 'creator');
+    document.getElementById('tabGuest').classList.toggle('active', tab === 'guest');
+    document.getElementById('authError').textContent = '';
+    document.getElementById('authHint').textContent = tab === 'creator'
+      ? 'Введи API ключ Groq для полного доступа'
+      : 'Введи код и ключ доступа от создателя';
+  }
+
+  async function sha256(str) {
+    const buf = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(str));
+    return Array.from(new Uint8Array(buf)).map(b => b.toString(16).padStart(2,'0')).join('');
+  }
+
+  async function doAuth() {
+    const errEl = document.getElementById('authError');
+    errEl.textContent = '';
+    if (currentTab === 'creator') {
+      const val = document.getElementById('creatorInput').value.trim();
+      if (!val) { errEl.textContent = 'Введи API ключ'; return; }
+      if (!val.startsWith('gsk_')) { errEl.textContent = 'Неверный формат ключа'; return; }
+      apiKey = val;
+      isGuest = false;
+      enterApp();
+    } else {
+      const val = document.getElementById('guestInput').value.trim();
+      if (!val) { errEl.textContent = 'Введи гостевой код'; return; }
+      const hash = await sha256(val);
+      if (hash !== GUEST_HASH) { errEl.textContent = 'Неверный код'; return; }
+      const guestKey = document.getElementById('guestKeyInput').value.trim();
+      if (!guestKey) { errEl.textContent = 'Введи ключ доступа'; return; }
+      if (!guestKey.startsWith('gsk_')) { errEl.textContent = 'Неверный формат ключа'; return; }
+      apiKey = guestKey;
+      isGuest = true;
+      enterApp();
+    }
+  }
+
+  function enterApp() {
+    document.getElementById('authScreen').style.display = 'none';
+    document.getElementById('mainApp').classList.add('visible');
+    document.getElementById('statusDot').classList.add('online');
+    document.getElementById('statusText').textContent = 'online';
+    if (isGuest) document.getElementById('guestBadge').classList.add('show');
+    addMsg('navi', isGuest ? 'Гостевой доступ активирован. Чем могу помочь?' : 'Онлайн. Чем могу помочь?');
+    setupVoice();
+    document.getElementById('creatorInput').addEventListener('keydown', e => { if(e.key==='Enter') doAuth(); });
+    document.getElementById('guestInput').addEventListener('keydown', e => { if(e.key==='Enter') doAuth(); });
+  }
+
+  function logout() { closeMenu(); location.reload(); }
+
+  // MENU
+  function toggleMenu() { document.getElementById('dropdown').classList.toggle('open'); }
+  function closeMenu() { document.getElementById('dropdown').classList.remove('open'); }
+  document.addEventListener('click', (e) => { if (!e.target.closest('.menu-wrap')) closeMenu(); });
+  function toggleWakeFromMenu() { closeMenu(); wakeActive ? stopWake() : startWake(); }
+  function toggleMuteFromMenu() { closeMenu(); toggleMute(); }
+
+  // MESSAGES
+  function addMsg(role, text) {
+    const wrap = document.getElementById('messages');
+    const div = document.createElement('div');
+    div.className = `msg ${role}`;
+    const meta = document.createElement('div');
+    meta.className = 'msg-meta';
+    meta.textContent = role === 'navi' ? 'N.A.V.I' : role === 'user' ? 'ты' : 'система';
+    const t = document.createElement('div');
+    t.className = 'msg-text';
+    t.textContent = text;
+    div.appendChild(meta);
+    div.appendChild(t);
+    wrap.appendChild(div);
+    wrap.scrollTop = wrap.scrollHeight;
+  }
+
+  function showTyping() {
+    const wrap = document.getElementById('messages');
+    const div = document.createElement('div');
+    div.id = 'typing';
+    div.className = 'msg navi';
+    div.innerHTML = '<div class="msg-meta">N.A.V.I</div><div class="typing-dots"><span></span><span></span><span></span></div>';
+    wrap.appendChild(div);
+    wrap.scrollTop = wrap.scrollHeight;
+  }
+
+  function hideTyping() { const t = document.getElementById('typing'); if(t) t.remove(); }
+
+  // COMMANDS
+  function handleCommand(msg) {
+    const m = msg.toLowerCase().trim();
+
+    // Команда: время (все пользователи)
+    if (m.includes('сколько времени') || m.includes('который час') || m.includes('сколько сейчас') || m.includes('время')) {
+      const now = new Date();
+      const h = now.getHours().toString().padStart(2,'0');
+      const min = now.getMinutes().toString().padStart(2,'0');
+      addMsg('navi', `Сейчас ${h}:${min}`);
+      speak(`Сейчас ${h} часов ${min} минут`);
+      return true;
+    }
+
+    // Команда: без звука (все пользователи)
+    if (m.includes('без звука') || m.includes('обеззвучь') || m.includes('замолчи') || m.includes('выключи звук') || m.includes('обезвучный')) {
+      if (!isMuted) toggleMute();
+      return true;
+    }
+
+    // Команда: включить звук (все пользователи)
+    if (m.includes('включи звук') || m.includes('со звуком') || m.includes('говори вслух')) {
+      if (isMuted) toggleMute();
+      return true;
+    }
+
+    // Ниже — только создатель
+    if (isGuest) {
+      addMsg('sys', 'Эта команда доступна только создателю');
+      return true;
+    }
+
+    // Команда: музыка
+    if (m.includes('включи музыку') || m.includes('вкл музыку') || m.includes('музыку') || m.includes('музыка')) {
+      window.open('https://music.youtube.com', '_blank');
+      addMsg('navi', 'Открываю YouTube Music.');
+      speak('Открываю YouTube Music');
+      return true;
+    }
+
+    // Команда: открыть сайт
+    const sites = {
+      'ютуб': 'https://youtube.com',
+      'youtube': 'https://youtube.com',
+      'гугл': 'https://google.com',
+      'google': 'https://google.com',
+      'инстаграм': 'https://instagram.com',
+      'instagram': 'https://instagram.com',
+      'твиттер': 'https://twitter.com',
+      'twitter': 'https://twitter.com',
+      'телеграм': 'https://web.telegram.org',
+      'telegram': 'https://web.telegram.org',
+      'тикток': 'https://tiktok.com',
+      'tiktok': 'https://tiktok.com',
+      'нетфликс': 'https://netflix.com',
+      'netflix': 'https://netflix.com',
+      'гитхаб': 'https://github.com',
+      'github': 'https://github.com',
+    };
+    if (m.includes('открой') || m.includes('перейди') || m.includes('зайди')) {
+      for (const [key, url] of Object.entries(sites)) {
+        if (m.includes(key)) {
+          window.open(url, '_blank');
+          addMsg('navi', `Открываю ${key}.`);
+          speak(`Открываю ${key}`);
+          return true;
+        }
+      }
+    }
+
+    return false; // не команда — отправить в AI
+  }
+
+  // SEND
+  async function sendMessage(text) {
+    if (isLoading) return;
+    if (!apiKey) { addMsg('sys', 'Нет API ключа'); return; }
+    const input = document.getElementById('msgInput');
+    const msg = text || input.value.trim();
+    if (!msg) return;
+    if (!text) { input.value = ''; autoResize(input); }
+
+    // Проверяем команды
+    if (handleCommand(msg)) return;
+
+    addMsg('user', msg);
+    history.push({ role: 'user', content: msg });
+    isLoading = true;
+    document.getElementById('sendBtn').disabled = true;
+    showTyping();
+    try {
+      const res = await fetch('https://api.groq.com/openai/v1/chat/completions', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${apiKey}` },
+        body: JSON.stringify({
+          model: 'llama-3.3-70b-versatile',
+          messages: [{ role: 'system', content: SYSTEM_PROMPT }, ...history.slice(-20)],
+          max_tokens: 1024,
+          temperature: 0.7
+        })
+      });
+      const data = await res.json();
+      hideTyping();
+      if (data.error) { addMsg('sys', data.error.message); }
+      else {
+        const reply = data.choices[0].message.content;
+        history.push({ role: 'assistant', content: reply });
+        addMsg('navi', reply);
+        speak(reply);
+      }
+    } catch(e) { hideTyping(); addMsg('sys', 'Ошибка соединения'); }
+    isLoading = false;
+    document.getElementById('sendBtn').disabled = false;
+  }
+
+  function speak(text) {
+    if (!window.speechSynthesis || isMuted) return;
+    const s = text.length > 250 ? text.substring(0, 250) + '...' : text;
+    const u = new SpeechSynthesisUtterance(s);
+    u.lang = 'ru-RU'; u.rate = 1.05;
+    window.speechSynthesis.cancel();
+    window.speechSynthesis.speak(u);
+  }
+
+  function toggleMute() {
+    isMuted = !isMuted;
+    if (isMuted) {
+      window.speechSynthesis.cancel();
+      addMsg('navi', 'Режим без звука включён. Буду отвечать только текстом.');
+    } else {
+      addMsg('navi', 'Звук включён.');
+    }
+    // Update mute label in menu
+    document.getElementById('muteMenuLabel').textContent = isMuted ? 'Включить звук' : 'Выключить звук';
+  }
+
+  function handleKey(e) { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); sendMessage(); } }
+  function autoResize(el) { el.style.height = 'auto'; el.style.height = Math.min(el.scrollHeight, 100) + 'px'; }
+
+  // VOICE
+  function setupVoice() {
+    const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+    if (!SR) { document.getElementById('voiceBtn').style.opacity = '0.3'; return; }
+    recognition = new SR();
+    recognition.lang = 'ru-RU';
+    recognition.continuous = false;
+    recognition.interimResults = false;
+    recognition.onresult = (e) => {
+      const text = e.results[0][0].transcript;
+      document.getElementById('msgInput').value = text;
+      stopVoice(); sendMessage();
+    };
+    recognition.onerror = () => stopVoice();
+    recognition.onend = () => stopVoice();
+  }
+
+  function toggleVoice() { if (!recognition) return; isListening ? stopVoice() : startVoice(); }
+  function startVoice() {
+    try { recognition.start(); } catch(e) {}
+    isListening = true;
+    document.getElementById('voiceBtn').classList.add('active-mic');
+    document.getElementById('voiceBtn').textContent = '⏺';
+  }
+  function stopVoice() {
+    if (recognition) try { recognition.stop(); } catch(e) {}
+    isListening = false;
+    document.getElementById('voiceBtn').classList.remove('active-mic');
+    document.getElementById('voiceBtn').textContent = '🎤';
+  }
+
+  // WAKE WORD
+  function startWake() {
+    const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+    if (!SR) return;
+    wakeRecognition = new SR();
+    wakeRecognition.lang = 'ru-RU';
+    wakeRecognition.continuous = true;
+    wakeRecognition.interimResults = true;
+    wakeRecognition.onresult = (e) => {
+      for (let i = e.resultIndex; i < e.results.length; i++) {
+        const t = e.results[i][0].transcript.toLowerCase().trim();
+        if (t.includes('нави') || t.includes('navi')) {
+          let cmd = t.replace(/нави[,\s]*/gi,'').replace(/navi[,\s]*/gi,'').trim();
+          if (cmd.length > 2) sendMessage(cmd);
+          else { addMsg('navi', 'Слушаю...'); startVoice(); }
+          break;
+        }
+      }
+    };
+    wakeRecognition.onend = () => { if (wakeActive) try { wakeRecognition.start(); } catch(e){} };
+    wakeRecognition.onerror = (e) => {
+      if (e.error !== 'no-speech' && wakeActive) setTimeout(() => { try { wakeRecognition.start(); } catch(e){} }, 1000);
+    };
+    try {
+      wakeRecognition.start();
+      wakeActive = true;
+      document.getElementById('statusDot').classList.remove('online');
+      document.getElementById('statusDot').classList.add('wake');
+      document.getElementById('statusText').textContent = 'слушаю "нави"';
+      document.getElementById('wakeMenuLabel').textContent = 'Выключить wake word';
+      addMsg('navi', 'Wake word включён. Скажи "НАВИ" — и я отвечу.');
+    } catch(e) { addMsg('sys', 'Разреши доступ к микрофону'); }
+  }
+
+  function stopWake() {
+    if (wakeRecognition) try { wakeRecognition.stop(); } catch(e) {}
+    wakeActive = false;
+    document.getElementById('statusDot').classList.remove('wake');
+    document.getElementById('statusDot').classList.add('online');
+    document.getElementById('statusText').textContent = 'online';
+    document.getElementById('wakeMenuLabel').textContent = 'Включить wake word';
+  }
+</script>
+</body>
+</html>
